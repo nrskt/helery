@@ -49,6 +49,28 @@ Full sample code is `example/Sample.hs`.
     main = runApp (routing :: RoutingType IO MyRouter)
     ```
 
+4. Client code(python).
+    
+    client.py
+    ```python:client.py
+    from celery import Celery
+    
+    app = Celery()
+    app.config_from_object("config")
+    
+    app.send_task("AHandler", args=[1, 2], kwargs=dict(name="nrskt", age=20), queue="hsworker")
+    ```
+
+5. run
+    
+    ```
+    # start worker
+    ./example
+    
+    # send task
+    python client.py
+    ```
+
 
 # Want to implement
 
