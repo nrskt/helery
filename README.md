@@ -43,37 +43,41 @@ Full sample code is `example/Sample.hs`.
     ```
 
 3. Implement main.
+   Use `parseCommandLineOption` function.
+   The function get the option which broker url, queue name
+   and configuration file path.
 
     ```Haskell
     main :: IO ()
-    main = runApp (routing :: RoutingType IO MyRouter)
+    options <- parseCommandLineOption
+    main = runApp options (routing :: RoutingType IO MyRouter)
     ```
 
 4. Client code(python).
-    
+
     client.py
     ```python:client.py
     from celery import Celery
-    
+
     app = Celery()
     app.config_from_object("config")
-    
+
     app.send_task("AHandler", args=[1, 2], kwargs=dict(name="nrskt", age=20), queue="hsworker")
     ```
 
 5. run
-    
+
     ```
     # start worker
-    ./example
-    
+    ./example -q hsworker -b redis://:password@localhost:6379/0
+
     # send task
     python client.py
     ```
 
 # Want to implement
 
-* Use configuration file
+~~ * Use configuration file~~
 * Logging
 * eta
 * retry
