@@ -19,10 +19,12 @@ import           Data.Conduit           (Conduit, ResumableSource, Sink, Source,
                                          (=$), (=$=))
 import qualified Data.Conduit.List      as CL
 import           Data.Maybe             (fromJust)
+import           Data.Monoid            ((<>))
 import           Data.Text              (Text, pack)
 import qualified Data.Text.Encoding     as T
 import qualified Database.Redis         as Redis
 
+import           Helery.RunOptions      (Options (..), parseRedisURI)
 import           Helery.Task            (Dispatchable, dispatch)
 
 -- | Redis key type
@@ -56,15 +58,18 @@ type RoutingType m a = Sink B.ByteString m a
 --                 SearchServiceHandlerRoute <$> (parseJSON args :: Parser SearchServiceHandler)
 --             Nothing -> fail "Not Found routing"
 
--- runApp (routing :: RoutingType IO MyRouter)
+-- runApp options (routing :: RoutingType IO MyRouter)
 --
 runApp :: (FromJSON a, Dispatchable a)
-       => RoutingType IO a
+       => Options
+       -> RoutingType IO a
        -> IO ()
-runApp routing = do
-    print "Starting worker."
-    conn <- connection
-    (qm, _) <- redisQSource conn  (B.pack "hsworker")
+runApp opt routing = do
+    print "Starting worker"
+    print $ "watch queue: " <> queueName opt
+
+    conn <- connection . parseRedisURI $ brokerConfig opt
+    (qm, _) <- redisQSource conn  (queueName opt)
         =$ decodeUtf8Conduit
         =$ parseBodyConduit
         =$ decodeBase64Conduit
@@ -80,19 +85,10 @@ routing = do
         Nothing -> routing
         Just s  -> return $ fromJust (decode (fromStrict s))
 
-
--- | configuration of redis
-connectInfo :: Redis.ConnectInfo
-connectInfo = Redis.defaultConnectInfo
-    { Redis.connectHost = "localhost"
-    , Redis.connectPort = Redis.PortNumber 6379
-    , Redis.connectDatabase = 1
-    , Redis.connectMaxConnections = 50
-    , Redis.connectMaxIdleTime = 30 }
-
 -- | make redis connection
-connection :: IO Redis.Connection
-connection = Redis.connect connectInfo
+connection :: Redis.ConnectInfo
+           -> IO Redis.Connection
+connection = Redis.connect
 
 -- | Source function which get the message from redis queue which created by Celery
 -- Expect queue type is Redis LIST. this source get the message using LPOP one by one.
