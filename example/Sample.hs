@@ -99,4 +99,7 @@ instance FromJSON BHandlerKwargs where
                        <*> v .: "age"
 
 main :: IO ()
-main = runApp (routing :: RoutingType IO MyRouter)
+main = do
+    options <- parseCommandLineOption
+    print options  -- Debug for option value
+    runApp options (routing :: RoutingType IO MyRouter)
