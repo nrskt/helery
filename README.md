@@ -47,6 +47,13 @@ Full sample code is `example/Sample.hs`.
    The function get the option which broker url, queue name
    and configuration file path.
 
+   If you want to use custom configuration for your app,
+   You can use `-c or --config` option. The Option represents
+   the configuration file path.
+
+   For example, You can write the DB connection info which use for your app.
+
+
     ```Haskell
     main :: IO ()
     options <- parseCommandLineOption
@@ -77,7 +84,7 @@ Full sample code is `example/Sample.hs`.
 
 # Want to implement
 
-~~ * Use configuration file~~
+* ~~Use configuration file~~
 * Logging
 * eta
 * retry
