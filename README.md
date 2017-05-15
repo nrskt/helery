@@ -71,7 +71,6 @@ Full sample code is `example/Sample.hs`.
     python client.py
     ```
 
-
 # Want to implement
 
 * Use configuration file
