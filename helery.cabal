@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Helery
                      , Helery.Application
+                     , Helery.Logger
                      , Helery.Task
                      , Helery.RunOptions
   build-depends:       base >= 4.7 && < 5
@@ -28,8 +29,10 @@ library
                      , containers
                      , hashmap
                      , hedis
+                     , katip
                      , lens
                      , lens-aeson
+                     , mtl
                      , network-uri
                      , optparse-applicative
                      , text
