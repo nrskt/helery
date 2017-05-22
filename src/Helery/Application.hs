@@ -6,7 +6,7 @@ module Helery.Application
     ) where
 
 
-import           Control.Concurrent     (forkIO)
+import           Control.Concurrent     (forkIO, threadDelay)
 import           Control.Lens           ((^?))
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Aeson             (FromJSON, decode)
@@ -24,6 +24,7 @@ import           Data.Text              (Text, pack)
 import qualified Data.Text.Encoding     as T
 import qualified Database.Redis         as Redis
 
+import           Helery.Logger          (infoLog, logStr, mkLogger)
 import           Helery.RunOptions      (Options (..), parseRedisURI)
 import           Helery.Task            (Dispatchable, dispatch)
 
@@ -65,8 +66,9 @@ runApp :: (FromJSON a, Dispatchable a)
        -> RoutingType IO a
        -> IO ()
 runApp opt routing = do
-    print "Starting worker"
-    print $ "watch queue: " <> queueName opt
+    logger <- mkLogger
+    infoLog logger "Start worker" (pure ())
+    infoLog logger (logStr $ "watch queue: " <> queueName opt) (pure ())
 
     conn <- connection . parseRedisURI $ brokerConfig opt
     (qm, _) <- redisQSource conn  (queueName opt)
@@ -100,9 +102,13 @@ redisQSource :: (Monad m, MonadIO m)
 redisQSource conn key = do
     src <- liftIO $ Redis.runRedis conn (Redis.lpop key)
     case src of
-        Left e  -> redisQSource conn key
+        Left e  -> do
+            liftIO $ threadDelay (1000 * 250)
+            redisQSource conn key
         Right m -> case m of
-            Nothing -> redisQSource conn key
+            Nothing -> do
+                liftIO $ threadDelay (1000 * 250)
+                redisQSource conn key
             Just m' -> yield m' >> redisQSource conn key
 
 -- | Conduit function which convert BytesString to Text.
